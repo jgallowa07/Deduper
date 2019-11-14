@@ -50,5 +50,6 @@ def flush_buffer(output_fp, unique_align_buffer):
     
     for key in unique_align_buffer:
         output_fp.write(unique_align_buffer[key][0])
+    del unique_align_buffer
 
     return None

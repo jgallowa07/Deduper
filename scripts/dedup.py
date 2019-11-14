@@ -92,7 +92,7 @@ if __name__ == "__main__":
             # buffer to the output file
             flush_buffer(de_dup_sam_file_pointer, unique_chrom_align)
             current_chromosome = alignment_record[2]
-            unique_chromosome_mapped_reads = {}
+            unique_chrom_align = {}
 
     # flush the buff one last time for the last chromosome.
     flush_buffer(de_dup_sam_file_pointer, unique_chrom_align)
