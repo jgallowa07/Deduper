@@ -88,9 +88,9 @@ if __name__ == "__main__":
         
         # if the alignment record chromosome is different,
         # it's time to flush the Buff!
-        if alignment_record[2] != current_chromosome:
+        #if alignment_record[2] != current_chromosome:
             
-            unique_chrom_set = set()
+            #unique_chrom_set = set()
     
             # this function will write out the contents of our 
             # buffer to the output file

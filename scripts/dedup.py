@@ -2,6 +2,8 @@
 """
 Author: Jared Galloway
 
+Had helpful conversations with Thomas Biondi, Seve Villarruel, Nick Wagner, Stacey Coonrod, Pete Batzel
+
 This file is an executable python script
 which takes in a SAM formatted alignment file 
 and writes out another SAM file with all PCR duplicates
