@@ -9,7 +9,7 @@ import sys
 import io
 import re 
 
-def process_record(raw_record, umi, unique_align_buffer):
+def process_record(raw_record, umi, unique_align_buffer, out_file):
     """
     this function will 'process' one record,
     by parsing the sam record, checking if a PCR duplicate 
@@ -37,18 +37,8 @@ def process_record(raw_record, umi, unique_align_buffer):
 
     unique_key = f"{position}_{umi}_{is_positive}"
     if unique_key not in unique_align_buffer:
-        unique_align_buffer[unique_key] = [raw_record]
+        out_file.write(raw_record)
+        unique_align_buffer.add(unique_key)
      
     return None
 
-def flush_buffer(output_fp, unique_align_buffer):
-    """
-    this function takes in a unique align buffer,
-    and writes all record to the fp given by output_fp
-    """
-    
-    for key in unique_align_buffer:
-        output_fp.write(unique_align_buffer[key][0])
-    del unique_align_buffer
-
-    return None
