@@ -42,7 +42,7 @@ parser.add_argument('-umi', default = None, type=str, help='a file containing UM
 args = parser.parse_args()
 
 # SCRIPT
-
+"""
 if __name__ == "__main__":
 
     # the data structure which will hold all of
@@ -55,9 +55,7 @@ if __name__ == "__main__":
     umi_list = []
     
     if args.umi != None:
-        umi_fp = open(args.umi,"r")
-        for line in umi_fp:
-            umi_list.append(line.strip().split()[0])
+        # populate umi list!
 
     # actual same file pointer    
     sam_file_pointer = open(args.file, "r")
@@ -68,41 +66,34 @@ if __name__ == "__main__":
     # now immediatly write out the header to our output
     header_line = sam_file_pointer.readline()
     while header_line[0] == '@':
-        de_dup_sam_file_pointer.write(header_line)
-        header_line = sam_file_pointer.readline()
+        # write your stuff out immediately
 
     # now, get to the actual de-duping.
     # the first thing we would like to do is keep track
     # of the chromosome we are one. 
     
-    alignment_record = header_line.strip().split()
-    current_chromosome = alignment_record[2]
+    current_chromosome = get starting chrom
     for raw_record in sam_file_pointer:
         # split the alignment recrd to a more useful list
         alignment_record = raw_record.strip().split()
 
-        # This function will 
-        umi = alignment_record[0].split(":")[-1]
         if umi in umi_list:
-            process_record(raw_record, umi, unique_chrom_align)
+            # the helper function will process and add to dictionary 
+            # if necessary
+            #process_record(raw_record, umi, unique_chrom_align)
         
         # if the alignment record chromosome is different,
         # it's time to flush the Buff!
-        if alignment_record[2] != current_chromosome:
+        # theres a better way to do this using a set rather than 
+        # flughing the buffer. So I'm, going to try both ways and compare.
     
             # this function will write out the contents of our 
             # buffer to the output file
-            flush_buffer(de_dup_sam_file_pointer, unique_chrom_align)
-            current_chromosome = alignment_record[2]
-            unique_chrom_align = {}
 
     # flush the buff one last time for the last chromosome.
-    flush_buffer(de_dup_sam_file_pointer, unique_chrom_align)
     
     # remember to close files for good practice :)
-    sam_file_pointer.close()
-    de_dup_sam_file_pointer.close()  
-
+"""
 
 
 
