@@ -41,6 +41,8 @@ args = parser.parse_args()
 
 # SCRIPT
 
+count = 0
+
 if __name__ == "__main__":
 
     # the data structure which will hold all of
@@ -89,8 +91,8 @@ if __name__ == "__main__":
         # if the alignment record chromosome is different,
         # it's time to flush the Buff!
         if alignment_record[2] != current_chromosome:
-            
-            unique_chrom_set = set()
+            count += 1   
+            #unique_chrom_set = set()
     
             # this function will write out the contents of our 
             # buffer to the output file
@@ -100,6 +102,8 @@ if __name__ == "__main__":
 
     # flush the buff one last time for the last chromosome.
     #flush_buffer(de_dup_sam_file_pointer, unique_chrome_set)
+
+    
     
     # remember to close files for good practice :)
     sam_file_pointer.close()
