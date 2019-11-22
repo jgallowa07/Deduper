@@ -21,7 +21,7 @@ import argparse
 from collections import defaultdict
 import sys
 import numpy as np
-from helpers import *
+from helpers import * # TODO not sure we need this tbh
 
 # ARGPARSE
 
@@ -42,8 +42,6 @@ parser.add_argument('-umi', default = None, type=str, help='a file containing \
 args = parser.parse_args()
 
 # SCRIPT
-
-count = 0
 
 if __name__ == "__main__":
 
@@ -82,29 +80,35 @@ if __name__ == "__main__":
         # split the alignment recrd to a more useful list
         alignment_record = raw_record.strip().split()
 
-        # This function will 
+        # need a valid umi
+        # TODO: probably need to be sure an umi file exists
         umi = alignment_record[0].split(":")[-1]
         if umi in umi_list:
-            
+
+            # Parse the CIGAR
             record = raw_record.strip().split()
             flag = int(record[1])
             start_position = int(record[3])
             position = int(record[3])
             cigar_string = record[5]
 
+            # sugar
             is_positive = True if ((flag & 16) == 16) else False
             matches = re.findall(r'(\d+)([A-Z]{1})', cigar_string)
 
             # for both positive and negative strand,
             # we want to subtract *leading* soft clipping 
+            # talked with Thomas Biondi on all these rules for CIGAR
             if matches[0][1] == 'S':
                 position -= int(matches[0][0])
             
+            # the interesting case, finding the starting read position
             if not is_positive:
                 for match in matches[1:]:
                     if match[1] not in  ('I','X','=') :
                         position += int(match[0])
 
+            # create a unique key that can be looked up in O(log n)
             unique_key = f"{position}_{umi}_{is_positive}"
             if unique_key not in unique_chrom_set:
                 de_dup_sam_file_pointer.write(raw_record)
