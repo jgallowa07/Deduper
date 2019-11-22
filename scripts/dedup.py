@@ -2,8 +2,6 @@
 """
 Author: Jared Galloway
 
-Had helpful conversations with Thomas Biondi, Seve Villarruel, Nick Wagner, Stacey Coonrod, Pete Batzel
-
 This file is an executable python script
 which takes in a SAM formatted alignment file 
 and writes out another SAM file with all PCR duplicates
@@ -28,7 +26,8 @@ from helpers import *
 # ARGPARSE
 
 # TODO Clean this up
-parser = argparse.ArgumentParser(description='This file is python code for a sam file \
+parser = argparse.ArgumentParser(description='This file is python code for a sam \
+    file \
     de-duplication of PCR duplicates. It will run through a SORTED sam file and \
     output another file which only conatins uniquly mapped reads.')
 parser.add_argument('-file', type=str,
@@ -37,11 +36,14 @@ parser.add_argument('-out', type=str, help='the file path to the output file \
     which will be the de-duplicated file will be written to.')
 parser.add_argument('-paired', type=str, help='optional arg, designates \
     file is paired end (not single-end)')
-parser.add_argument('-umi', default = None, type=str, help='a file containing UMIs used in \
+parser.add_argument('-umi', default = None, type=str, help='a file containing \
+    UMIs used in \
     the reads that are acceptable.')
 args = parser.parse_args()
 
 # SCRIPT
+
+count = 0
 
 if __name__ == "__main__":
 
@@ -49,7 +51,7 @@ if __name__ == "__main__":
     # the unique reads which I find as a buffer.
     # This buffer will be 'flushed' after each chromosome.
     # {"alignemt starting position" : ["full record", "umi"]}
-    unique_chrom_align = {}
+    unique_chrom_set = set()
     
     # a list of unique UMI's.
     umi_list = []
@@ -74,7 +76,6 @@ if __name__ == "__main__":
     # now, get to the actual de-duping.
     # the first thing we would like to do is keep track
     # of the chromosome we are one. 
-    
     alignment_record = header_line.strip().split()
     current_chromosome = alignment_record[2]
     for raw_record in sam_file_pointer:
@@ -84,25 +85,40 @@ if __name__ == "__main__":
         # This function will 
         umi = alignment_record[0].split(":")[-1]
         if umi in umi_list:
-            process_record(raw_record, umi, unique_chrom_align)
+            
+            record = raw_record.strip().split()
+            flag = int(record[1])
+            start_position = int(record[3])
+            position = int(record[3])
+            cigar_string = record[5]
+
+            is_positive = True if ((flag & 16) == 16) else False
+            matches = re.findall(r'(\d+)([A-Z]{1})', cigar_string)
+
+            # for both positive and negative strand,
+            # we want to subtract *leading* soft clipping 
+            if matches[0][1] == 'S':
+                position -= int(matches[0][0])
+            
+            if not is_positive:
+                for match in matches[1:]:
+                    if match[1] not in  ('I','X','=') :
+                        position += int(match[0])
+
+            unique_key = f"{position}_{umi}_{is_positive}"
+            if unique_key not in unique_chrom_set:
+                de_dup_sam_file_pointer.write(raw_record)
+                unique_chrom_set.add(unique_key) 
         
         # if the alignment record chromosome is different,
         # it's time to flush the Buff!
         if alignment_record[2] != current_chromosome:
-    
-            # this function will write out the contents of our 
-            # buffer to the output file
-            flush_buffer(de_dup_sam_file_pointer, unique_chrom_align)
+            unique_chrom_set = set()
             current_chromosome = alignment_record[2]
-            unique_chrom_align = {}
-
-    # flush the buff one last time for the last chromosome.
-    flush_buffer(de_dup_sam_file_pointer, unique_chrom_align)
     
     # remember to close files for good practice :)
     sam_file_pointer.close()
     de_dup_sam_file_pointer.close()  
-
 
 
 
