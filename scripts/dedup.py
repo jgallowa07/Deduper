@@ -21,7 +21,8 @@ import argparse
 from collections import defaultdict
 import sys
 import numpy as np
-from helpers import * # TODO not sure we need this tbh
+import re
+#from helpers import * # TODO not sure we need this tbh
 
 # ARGPARSE
 
@@ -99,13 +100,14 @@ if __name__ == "__main__":
             # for both positive and negative strand,
             # we want to subtract *leading* soft clipping 
             # talked with Thomas Biondi on all these rules for CIGAR
-            if matches[0][1] == 'S':
-                position -= int(matches[0][0])
+            if is_positive:
+                if matches[0][1] == 'S':
+                    position -= int(matches[0][0])
             
             # the interesting case, finding the starting read position
-            if not is_positive:
+            else:
                 for match in matches[1:]:
-                    if match[1] not in  ('I','X','=') :
+                    if match[1] not in  ['I','X','='] :
                         position += int(match[0])
 
             # create a unique key that can be looked up in O(log n)
