@@ -22,7 +22,6 @@ from collections import defaultdict
 import sys
 import numpy as np
 import re
-#from helpers import * # TODO not sure we need this tbh
 
 # ARGPARSE
 
@@ -78,39 +77,54 @@ if __name__ == "__main__":
     alignment_record = header_line.strip().split()
     current_chromosome = alignment_record[2]
     for raw_record in sam_file_pointer:
-        # split the alignment recrd to a more useful list
         alignment_record = raw_record.strip().split()
 
         # need a valid umi
-        # TODO: probably need to be sure an umi file exists
         umi = alignment_record[0].split(":")[-1]
         if umi in umi_list:
 
             # Parse the CIGAR
             record = raw_record.strip().split()
             flag = int(record[1])
+
+            # if it's not mapped
+            if ((flag & 4) == 4):
+                continue
+
             start_position = int(record[3])
             position = int(record[3])
             cigar_string = record[5]
 
-            # sugar
+            # sugar, the re is useful for CIGAR parsing into 
+            # a list of tuples so 
+            # "15S20I" -> [(15,'S'),(20,'I')]
             is_positive = True if ((flag & 16) == 16) else False
             matches = re.findall(r'(\d+)([A-Z]{1})', cigar_string)
 
-            # for both positive and negative strand,
-            # we want to subtract *leading* soft clipping 
             # talked with Thomas Biondi on all these rules for CIGAR
+            # if positive, then we just to need to adjust for leading
+            # leading soft clipping
             if is_positive:
                 if matches[0][1] == 'S':
                     position -= int(matches[0][0])
             
-            # the interesting case, finding the starting read position
+            # for negative strand:
             else:
-                for match in matches[1:]:
-                    if match[1] not in  ['I','X','='] :
+
+                # ignore *leading* soft clipping 
+                if matches[0][1] == 'S':
+                    matches = matches[1:]
+
+                # other wise we would like to simply
+                # sum everything that is not an insersion
+                # or X/= whatever those are.
+                for match in matches:
+                    if match[1] not in ['I','X','=']:
                         position += int(match[0])
 
+            # after weve corrected for position and got valid umi
             # create a unique key that can be looked up in O(log n)
+            # if this unique key exists inside our 
             unique_key = f"{position}_{umi}_{is_positive}"
             if unique_key not in unique_chrom_set:
                 de_dup_sam_file_pointer.write(raw_record)
